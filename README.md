@@ -1,5 +1,3 @@
-
-<?php
 # ProxiBlue_HyvaGlobalLoading module
 
 Ads a global loading indicator. 
