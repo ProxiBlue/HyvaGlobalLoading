@@ -120,7 +120,6 @@ use Magento\Framework\View\Element\Template;
                 const originalFetch = window.fetch;
 
                 window.fetch = async function (...args) {
-                    window.isLoading = true;
                     try {
                         return await originalFetch.apply(this, args);
                     } catch (error) {
