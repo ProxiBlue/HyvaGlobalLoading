@@ -4,7 +4,7 @@ Ads a global loading indicator.
 
 * activates on any form submit to indicate action 
 * can be activated, de-activated by setting a global variable ```window.isLoading = true|false```
-* listens to any ajax fail/complete events to deactive (prevents hung site with loader never going away)
+* listens to any ajax fail/complete events to hide (prevents hung site with loader never going away)
 * Throws an event that you can listen to if global variable changes so you can do things when loader shows/hides
 
 Uses Hyva default ui/loader.phtml ```Hyva_Theme::ui/loading.phtml```
