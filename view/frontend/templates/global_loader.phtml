@@ -134,5 +134,14 @@ use Magento\Framework\View\Element\Template;
 </script>
 
 <div id="global_loader" x-data="initLoaderDisplay()">
-    <?= $block->getChildHtml('ui_loader') ?>
+    <?php
+        try {
+            $block = $block->getChildHtml('ui_loader');
+        } catch (\Exception $e) {
+            $block = false;
+        }
+        if(is_string($block)) {
+            echo $block;
+        }
+    ?>
 </div>
