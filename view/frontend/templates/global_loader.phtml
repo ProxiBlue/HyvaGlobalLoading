@@ -88,7 +88,7 @@ use Magento\Framework\View\Element\Template;
                 HTMLFormElement.prototype.submit = function () {
                     // Trigger a "submit" event before calling the native submit method.
                     const event = new Event('submit', { bubbles: true, cancelable: true });
-                    const canceled = !this.dispatchEvent(event);
+                    const canceled = !window.dispatchEvent(event);
 
                     // Call the original `submit` method only if the event wasn't canceled.
                     if (!canceled) {
