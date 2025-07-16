@@ -27,8 +27,10 @@
 declare(strict_types=1);
 
 use Magento\Framework\View\Element\Template;
+use Hyva\Theme\ViewModel\HyvaCsp;
 
 /** @var Template $block */
+/** @var HyvaCsp $hyvaCsp */
 ?>
 <script>
     'use strict';
@@ -57,83 +59,88 @@ use Magento\Framework\View\Element\Template;
      * Initializes the loader display logic and overrides common functions
      * to manage the `isLoading` state.
      */
-    function initLoaderDisplay() {
-        return {
-            isLoading: false,
 
-            init() {
-                // Handle `isLoading` state changes from the `window` object.
-                window.addEventListener('isLoadingChanged', (event) => {
-                    this.isLoading = event.detail;
-                });
+    window.addEventListener('alpine:init', () => {
+        function initLoaderDisplay() {
+            return {
+                isLoading: false,
 
-                this.overrideFormSubmit();
-                this.overrideFetch();
+                init() {
+                    // Handle `isLoading` state changes from the `window` object.
+                    window.addEventListener('isLoadingChanged', (event) => {
+                        this.isLoading = event.detail;
+                    });
 
-                // Add a global form submit listener to handle form submissions.
-                document.addEventListener(
-                    'submit',
-                    this.handleFormSubmit,
-                    true // Set this to capture events in the capturing phase.
-                );
-            },
+                    this.overrideFormSubmit();
+                    this.overrideFetch();
 
-            /**
-             * Overrides the HTMLFormElement prototype's `submit` method
-             * to ensure consistent handling of form submissions.
-             */
-            overrideFormSubmit() {
-                const nativeSubmit = HTMLFormElement.prototype.submit;
+                    // Add a global form submit listener to handle form submissions.
+                    document.addEventListener(
+                        'submit',
+                        this.handleFormSubmit,
+                        true // Set this to capture events in the capturing phase.
+                    );
+                },
 
-                HTMLFormElement.prototype.submit = function () {
-                    // Trigger a "submit" event before calling the native submit method.
-                    const event = new Event('submit', { bubbles: true, cancelable: true });
-                    const canceled = !window.dispatchEvent(event);
+                /**
+                 * Overrides the HTMLFormElement prototype's `submit` method
+                 * to ensure consistent handling of form submissions.
+                 */
+                overrideFormSubmit() {
+                    const nativeSubmit = HTMLFormElement.prototype.submit;
 
-                    // Call the original `submit` method only if the event wasn't canceled.
-                    if (!canceled) {
-                        nativeSubmit.call(this);
+                    HTMLFormElement.prototype.submit = function () {
+                        // Trigger a "submit" event before calling the native submit method.
+                        const event = new Event('submit', { bubbles: true, cancelable: true });
+                        const canceled = !window.dispatchEvent(event);
+
+                        // Call the original `submit` method only if the event wasn't canceled.
+                        if (!canceled) {
+                            nativeSubmit.call(this);
+                        }
+                    };
+                },
+
+                /**
+                 * Event handler for the global "submit" event to set the `isLoading` property.
+                 * This will trigger when any form is submitted.
+                 */
+                handleFormSubmit(event) {
+                    const form = event.target;
+
+                    if (form.tagName === 'FORM') {
+                        window.isLoading = true; // Indicate that the form is being submitted.
                     }
-                };
-            },
+                },
 
-            /**
-             * Event handler for the global "submit" event to set the `isLoading` property.
-             * This will trigger when any form is submitted.
-             */
-            handleFormSubmit(event) {
-                const form = event.target;
+                /**
+                 * Overrides the global `fetch` function to track AJAX requests
+                 * and manage the `isLoading` state accordingly.
+                 * Is loading is not enabled on ajax stat, as that will block user from using the
+                 * site whilst background ajax works, but, a form could initiate an ajax request, fail, and be stuck
+                 * on loader. This ensures loader is always disabled when ajax fails or completes
+                 */
+                overrideFetch() {
+                    const originalFetch = window.fetch;
 
-                if (form.tagName === 'FORM') {
-                    window.isLoading = true; // Indicate that the form is being submitted.
-                }
-            },
-
-            /**
-             * Overrides the global `fetch` function to track AJAX requests
-             * and manage the `isLoading` state accordingly.
-             * Is loading is not enabled on ajax stat, as that will block user from using the
-             * site whilst background ajax works, but, a form could initiate an ajax request, fail, and be stuck
-             * on loader. This ensures loader is always disabled when ajax fails or completes
-             */
-            overrideFetch() {
-                const originalFetch = window.fetch;
-
-                window.fetch = async function (...args) {
-                    try {
-                        return await originalFetch.apply(this, args);
-                    } catch (error) {
-                        throw error;
-                    } finally {
-                        window.isLoading = false;
-                    }
-                };
-            },
-        };
-    }
+                    window.fetch = async function (...args) {
+                        try {
+                            return await originalFetch.apply(this, args);
+                        } catch (error) {
+                            throw error;
+                        } finally {
+                            window.isLoading = false;
+                        }
+                    };
+                },
+            };
+        }
+        Alpine.data('initLoaderDisplay', initLoaderDisplay);
+    }, {once: true});
 </script>
+<?php $hyvaCsp->registerInlineScript() ?>
 
-<div id="global_loader" x-data="initLoaderDisplay()">
+<div id="global_loader" x-data="initLoaderDisplay">
     <?php
         try {
             $block = $block->getChildHtml('ui_loader');
