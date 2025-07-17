@@ -1,6 +1,6 @@
 {
   "name": "proxi-blue/module-hyva-global-loading",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Ads a global loading indicator that activates on any form submit to indicate action",
   "type": "magento2-module",
   "require": {
